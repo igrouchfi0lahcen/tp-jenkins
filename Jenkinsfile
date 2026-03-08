@@ -41,9 +41,10 @@ pipeline {
     }
 }
 
-        stage('SCA Scan - OWASP Dependency Check') {
+stage('SCA Scan - OWASP Dependency Check') {
     steps {
-        dependencyCheck additionalArguments: '--project "TP-Jenkins" --scan . --format HTML --format XML --out dependency-check-report', odcInstallation: 'OWASP-DC'
+        sh 'mkdir -p dependency-check-report'
+        dependencyCheck additionalArguments: '--project "TP-Jenkins" --scan . --format HTML --format XML --out dependency-check-report --failOnCVSS 7', odcInstallation: 'OWASP-DC'
     }
     post {
         always {
