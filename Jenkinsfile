@@ -25,6 +25,7 @@ pipeline {
             steps {
                 sh '''
                     pip install bandit --break-system-packages || pip install bandit
+                     export PATH=$PATH:/var/jenkins_home/.local/bin
                     bandit -r app.py -f txt -o bandit_report.txt || true
                     cat bandit_report.txt
                 '''
