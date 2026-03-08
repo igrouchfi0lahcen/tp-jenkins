@@ -25,19 +25,21 @@ pipeline {
         }
 
         stage('SAST Scan - SonarQube') {
-            steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh '''
-                        export PATH=$PATH:/var/jenkins_home/.local/bin
-                        sonar-scanner \
-                          -Dsonar.projectKey=TP-Jenkins \
-                          -Dsonar.sources=. \
-                          -Dsonar.host.url=http://sonarqube:9000 \
-                          -Dsonar.token=${SONAR_TOKEN}
-                    '''
-                }
+    steps {
+        withSonarQubeEnv('SonarQube') {
+            script {
+                def scannerHome = tool 'SonarScanner'
+                sh """
+                    ${scannerHome}/bin/sonar-scanner \
+                      -Dsonar.projectKey=TP-Jenkins \
+                      -Dsonar.sources=. \
+                      -Dsonar.host.url=http://sonarqube:9000 \
+                      -Dsonar.token=${SONAR_TOKEN}
+                """
             }
         }
+    }
+}
 
         stage('SCA Scan - OWASP Dependency Check') {
             steps {
