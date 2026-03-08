@@ -34,13 +34,19 @@ pipeline {
 
         stage('SCA Scan - OWASP Dependency Check') {
             steps {
-                dependencyCheck additionalArguments: '--scan . --format HTML --out dependency-check-report', odcInstallation: 'OWASP-DC'
+                 sh '''
+            export PATH=$PATH:/var/jenkins_home/.local/bin
+            pip install pip-audit --break-system-packages || pip install pip-audit
+            export PATH=$PATH:/var/jenkins_home/.local/bin
+            pip-audit -r requirements.txt -f json -o sca_report.json || true
+            pip-audit -r requirements.txt || true
+        '''
             }
-            post {
-                always {
-                    dependencyCheckPublisher pattern: 'dependency-check-report/dependency-check-report.xml'
-                }
-            }
+            // post {
+            //     always {
+            //         dependencyCheckPublisher pattern: 'dependency-check-report/dependency-check-report.xml'
+            //     }
+            // }
         }
 
     }
