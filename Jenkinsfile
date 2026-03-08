@@ -42,21 +42,15 @@ pipeline {
 }
 
         stage('SCA Scan - OWASP Dependency Check') {
-            steps {
-                dependencyCheck additionalArguments: '''
-                    --project "TP-Jenkins"
-                    --scan .
-                    --format HTML
-                    --format XML
-                    --out dependency-check-report
-                ''', odcInstallation: 'OWASP-DC'
-            }
-            post {
-                always {
-                    dependencyCheckPublisher pattern: 'dependency-check-report/dependency-check-report.xml'
-                }
-            }
+    steps {
+        dependencyCheck additionalArguments: '--project "TP-Jenkins" --scan . --format HTML --format XML --out dependency-check-report', odcInstallation: 'OWASP-DC'
+    }
+    post {
+        always {
+            dependencyCheckPublisher pattern: 'dependency-check-report/dependency-check-report.xml'
         }
+    }
+}
     }
 
     post {
