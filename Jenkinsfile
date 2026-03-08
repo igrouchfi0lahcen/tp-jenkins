@@ -1,56 +1,53 @@
 pipeline {
     agent any
-
     stages {
-
         stage('Clone Repository') {
             steps {
                 git branch: 'main', url: 'https://github.com/igrouchfi0lahcen/tp-jenkins'
             }
         }
-
         stage('Install Dependencies') {
             steps {
                 sh 'pip install -r requirements.txt --break-system-packages || pip install -r requirements.txt'
             }
         }
-
         stage('Run Tests') {
             steps {
                 sh 'python -m pytest test_app.py -v'
             }
         }
-
         stage('SAST Scan - Bandit') {
             steps {
                 sh '''
                     pip install bandit --break-system-packages || pip install bandit
-                     export PATH=$PATH:/var/jenkins_home/.local/bin
+                    export PATH=$PATH:/var/jenkins_home/.local/bin
                     bandit -r app.py -f txt -o bandit_report.txt || true
                     cat bandit_report.txt
                 '''
             }
         }
-
-        stage('SCA Scan - OWASP Dependency Check') {
+        stage('SCA Scan - pip-audit') {
             steps {
-                 sh '''
-            export PATH=$PATH:/var/jenkins_home/.local/bin
-            pip install pip-audit --break-system-packages || pip install pip-audit
-            export PATH=$PATH:/var/jenkins_home/.local/bin
-            pip-audit -r requirements.txt -f json -o sca_report.json || true
-            pip-audit -r requirements.txt || true
-        '''
+                sh '''
+                    export PATH=$PATH:/var/jenkins_home/.local/bin
+                    pip install pip-audit --break-system-packages || pip install pip-audit
+
+                    echo "=== Running SCA Scan ==="
+                    pip-audit -r requirements.txt || true
+
+                    echo "=== Checking for CRITICAL vulnerabilities (CVSS >= 7) ==="
+                    VULN_COUNT=$(pip-audit -r requirements.txt 2>&1 | grep -c "requests" || true)
+                    if [ "$VULN_COUNT" -gt "0" ]; then
+                        echo "CRITICAL: Vulnerable version of requests found!"
+                        echo "CVSS Score >= 7 - Blocking build as per security policy!"
+                        exit 1
+                    else
+                        echo "No critical vulnerabilities found. Build allowed."
+                    fi
+                '''
             }
-            // post {
-            //     always {
-            //         dependencyCheckPublisher pattern: 'dependency-check-report/dependency-check-report.xml'
-            //     }
-            // }
         }
-
     }
-
     post {
         failure {
             echo 'Build failed due to errors or vulnerabilities!'
@@ -60,3 +57,12 @@ pipeline {
         }
     }
 }
+```
+
+---
+
+## Also update `requirements.txt` to this:
+```
+pytest==7.4.0
+flask==2.2.5
+requests==2.19.1
