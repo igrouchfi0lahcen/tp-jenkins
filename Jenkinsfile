@@ -33,7 +33,7 @@ pipeline {
                     ${scannerHome}/bin/sonar-scanner \
                       -Dsonar.projectKey=TP-Jenkins \
                       -Dsonar.sources=. \
-                      -Dsonar.host.url=http://sonarqube:9000 \
+                      -Dsonar.host.url=http://172.17.0.3:9000\
                       -Dsonar.token=${SONAR_TOKEN}
                 """
             }
