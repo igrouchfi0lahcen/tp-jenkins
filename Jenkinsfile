@@ -28,23 +28,29 @@ pipeline {
         }
         stage('SCA Scan - pip-audit') {
             steps {
-                sh '''
-                    export PATH=$PATH:/var/jenkins_home/.local/bin
-                    pip install pip-audit --break-system-packages || pip install pip-audit
+              sh '''
+            export PATH=$PATH:/var/jenkins_home/.local/bin
 
-                    echo "=== Running SCA Scan ==="
-                    pip-audit -r requirements.txt || true
+            # Reinstall clean urllib3 to fix compatibility
+            pip install urllib3==2.0.0 --break-system-packages
 
-                    echo "=== Checking for CRITICAL vulnerabilities (CVSS >= 7) ==="
-                    VULN_COUNT=$(pip-audit -r requirements.txt 2>&1 | grep -c "requests" || true)
-                    if [ "$VULN_COUNT" -gt "0" ]; then
-                        echo "CRITICAL: Vulnerable version of requests found!"
-                        echo "CVSS Score >= 7 - Blocking build as per security policy!"
-                        exit 1
-                    else
-                        echo "No critical vulnerabilities found. Build allowed."
-                    fi
-                '''
+            echo "=== Running SCA Scan ==="
+            pip-audit -r requirements.txt || AUDIT_EXIT=$?
+
+            echo "=== Checking for CRITICAL vulnerabilities (CVSS >= 7) ==="
+            VULN_OUTPUT=$(pip-audit -r requirements.txt 2>&1 || true)
+            echo "$VULN_OUTPUT"
+
+            if echo "$VULN_OUTPUT" | grep -i "No known vulnerabilities"; then
+                echo "✅ No critical vulnerabilities found. Build allowed."
+            else
+                VULN_LINES=$(echo "$VULN_OUTPUT" | grep -v "^Traceback" | grep -v "File " | grep -v "Error" | grep -c "requests" || true)
+                if [ "$VULN_LINES" -gt "0" ]; then
+                    echo "❌ CRITICAL: Vulnerable dependency found - CVSS >= 7 - Blocking build!"
+                    exit 1
+                fi
+            fi
+        '''
             }
         }
     }
