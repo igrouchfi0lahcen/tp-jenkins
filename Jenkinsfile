@@ -40,7 +40,6 @@ pipeline {
         }
     }
 }
-
 stage('SCA Scan - OWASP Dependency Check') {
     steps {
         sh 'mkdir -p dependency-check-report'
