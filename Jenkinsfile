@@ -5,7 +5,7 @@ pipeline {
 
         stage('Clone Repository') {
             steps {
-                git branch: 'main', url: 'https://github.com/YOUR_USERNAME/tp-jenkins.git'
+                git branch: 'main', url: 'https://github.com/igrouchfi0lahcen/tp-jenkins'
             }
         }
 
