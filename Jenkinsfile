@@ -59,10 +59,3 @@ pipeline {
 }
 ```
 
----
-
-## Also update `requirements.txt` to this:
-```
-pytest==7.4.0
-flask==2.2.5
-requests==2.19.1
